@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: arenamind-fifa2026
+    env: static
+    buildCommand: npm run build
+    publishDir: dist
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com;"
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer-when-downgrade
