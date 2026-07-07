@@ -1,0 +1,13 @@
+# Git ignore rules for ArenaMind
+node_modules/
+.gemini/
+.agents/
+.vscode/
+CVS/
+.svn/
+.git/
+.DS_Store
+*.log
+walkthrough.md
+task.md
+implementation_plan.md
