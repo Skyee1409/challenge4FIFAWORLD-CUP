@@ -561,8 +561,9 @@ export default function App() {
                   <p>Real-time pathfinding and crowd density</p>
                 </div>
                 <div className="map-modes">
-                  <label className="toggle-switch">
+                  <label htmlFor="toggle-accessibility" className="toggle-switch">
                     <input
+                      id="toggle-accessibility"
                       type="checkbox"
                       checked={accessibleOnly}
                       onChange={(e) => setAccessibleOnly(e.target.checked)}
@@ -576,8 +577,8 @@ export default function App() {
               {/* Sizing selections */}
               <div className="route-selector-row">
                 <div className="select-wrapper">
-                  <label>Start</label>
-                  <select value={startNode} onChange={(e) => setStartNode(e.target.value)}>
+                  <label htmlFor="route-start">Start</label>
+                  <select id="route-start" value={startNode} onChange={(e) => setStartNode(e.target.value)}>
                     <option value="Gate_A">Gate A (North)</option>
                     <option value="Gate_B">Gate B (East)</option>
                     <option value="Gate_C">Gate C (South)</option>
@@ -596,8 +597,8 @@ export default function App() {
                   ⇆
                 </button>
                 <div className="select-wrapper">
-                  <label>Destination</label>
-                  <select value={endNode} onChange={(e) => setEndNode(e.target.value)}>
+                  <label htmlFor="route-end">Destination</label>
+                  <select id="route-end" value={endNode} onChange={(e) => setEndNode(e.target.value)}>
                     <option value="Sec_101">Section 101 (Seating)</option>
                     <option value="Sec_102">Section 102 (Seating)</option>
                     <option value="Sec_103">Section 103 (Seating)</option>
@@ -651,8 +652,9 @@ export default function App() {
                   <ul className="eco-checklist">
                     {ARENA_DATA.ecoActions.map(act => (
                       <li key={act.id}>
-                        <label className="custom-checkbox">
+                        <label htmlFor={act.id} className="custom-checkbox">
                           <input
+                            id={act.id}
                             type="checkbox"
                             checked={!!eco.checkedActions[act.id]}
                             disabled={act.id === 'chk-transit'} // Default transit disabled
@@ -859,17 +861,17 @@ export default function App() {
 
               <div className="staff-map-controls">
                 <div className="filter-group">
-                  <label className="filter-chk">
-                    <input type="checkbox" checked={showSecurity} onChange={(e) => setShowSecurity(e.target.checked)} /> 🛡️ Security
+                  <label htmlFor="show-security" className="filter-chk">
+                    <input id="show-security" type="checkbox" checked={showSecurity} onChange={(e) => setShowSecurity(e.target.checked)} /> 🛡️ Security
                   </label>
-                  <label className="filter-chk">
-                    <input type="checkbox" checked={showMedical} onChange={(e) => setShowMedical(e.target.checked)} /> 🩺 Medical
+                  <label htmlFor="show-medical" className="filter-chk">
+                    <input id="show-medical" type="checkbox" checked={showMedical} onChange={(e) => setShowMedical(e.target.checked)} /> 🩺 Medical
                   </label>
-                  <label className="filter-chk">
-                    <input type="checkbox" checked={showVolunteers} onChange={(e) => setShowVolunteers(e.target.checked)} /> 🙋 Volunteers
+                  <label htmlFor="show-volunteers" className="filter-chk">
+                    <input id="show-volunteers" type="checkbox" checked={showVolunteers} onChange={(e) => setShowVolunteers(e.target.checked)} /> 🙋 Volunteers
                   </label>
-                  <label className="filter-chk">
-                    <input type="checkbox" checked={showAlerts} onChange={(e) => setShowAlerts(e.target.checked)} /> ⚠️ Alerts
+                  <label htmlFor="show-incidents" className="filter-chk">
+                    <input id="show-incidents" type="checkbox" checked={showAlerts} onChange={(e) => setShowAlerts(e.target.checked)} /> ⚠️ Alerts
                   </label>
                 </div>
               </div>
@@ -896,9 +898,9 @@ export default function App() {
               </div>
 
               <div className="simulation-selector">
-                <label>Choose Scenario</label>
+                <label htmlFor="select-simulation-scenario">Choose Scenario</label>
                 <div className="select-btn-row">
-                  <select value={selectedScenario} onChange={(e) => setSelectedScenario(e.target.value)}>
+                  <select id="select-simulation-scenario" value={selectedScenario} onChange={(e) => setSelectedScenario(e.target.value)}>
                     <option value="thunderstorm">⚠️ Severe Thunderstorm Warning</option>
                     <option value="subway_delay">🚇 Metro Subway Power Failure</option>
                     <option value="gate_card_reader">🎟️ Gate B Ticket Scanner Outage</option>
