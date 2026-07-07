@@ -19,7 +19,7 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(initialLang);
-  const streamingTimer = useRef<NodeJS.Timeout | null>(null);
+  const streamingTimer = useRef<any>(null);
 
   // Initialize with greeting
   useEffect(() => {
@@ -65,7 +65,6 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
     let index = 0;
     streamingTimer.current = setInterval(() => {
       if (index < fullText.length) {
-        const nextChar = fullText.charAt(index);
         setMessages(prev => {
           const updated = [...prev];
           const lastMsg = updated[updated.length - 1];

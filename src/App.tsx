@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
-import { ARENA_DATA, Match, ServiceItem } from './data/arenaData';
+import { ARENA_DATA, ServiceItem } from './data/arenaData';
 import { MapService, MAP_NODES, MAP_EDGES, STAFF_RESOURCES } from './services/mapService';
-import { AIService } from './services/aiService';
 import { SimulationService } from './services/simulationService';
 import { useChat } from './hooks/useChat';
 import { useEcoPoints } from './hooks/useEcoPoints';
@@ -57,8 +56,12 @@ export default function App() {
 
   // Frame-Busting Clickjacking Defense
   useEffect(() => {
-    if (window.self !== window.top) {
-      window.top.location = window.self.location;
+    if (window.self !== window.top && window.top) {
+      try {
+        window.top.location.href = window.self.location.href;
+      } catch {
+        // ignore cross-origin error
+      }
     }
   }, []);
 
@@ -101,7 +104,7 @@ export default function App() {
 
   // Hooks setup
   const chat = useChat(selectedLang, handleChatTriggerAccessibility);
-  const eco = useEcoPoints(250, (msg) => {
+  const eco = useEcoPoints(250, () => {
     // Append claimed eco rewards ticket to chat history
     chat.sendMessage(`System eco voucher request`); // Dummy call to trigger state
     // We override to append directly
@@ -392,7 +395,7 @@ export default function App() {
             <span className="team">MEXICO</span>
             <span className="score">2</span>
             <span className="vs">-</span>
-            <span class="score">1</span>
+            <span className="score">1</span>
             <span className="team">USA</span>
           </div>
           <div className="match-meta">Estadio Azteca • 76'</div>
@@ -622,8 +625,8 @@ export default function App() {
                 {renderSVGMap(false)}
                 <div className="map-legend">
                   <span className="legend-item"><span className="dot dot-green"></span> Low Wait</span>
-                  <span class="legend-item"><span className="dot dot-orange"></span> Med Wait</span>
-                  <span className="legend-item"><span class="dot dot-red"></span> High Wait</span>
+                  <span className="legend-item"><span className="dot dot-orange"></span> Med Wait</span>
+                  <span className="legend-item"><span className="dot dot-red"></span> High Wait</span>
                   <span className="legend-item"><span className="dot dot-wheelchair"></span> Elevators/Ramps</span>
                 </div>
               </div>
@@ -721,7 +724,7 @@ export default function App() {
 
         {/* STAFF VIEW */}
         <div className={`persona-view ${activePersona === 'staff' ? 'active' : ''}`}>
-          <div class="view-grid grid-3-cols">
+          <div className="view-grid grid-3-cols">
             
             {/* Col 1: Operations Feed & Logger */}
             <section className="card glass-panel incidents-container">
