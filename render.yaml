@@ -1,7 +1,6 @@
 services:
-  - type: web
+  - type: static
     name: arenamind-fifa2026
-    env: static
     buildCommand: npm run build
     publishDir: dist
     headers:
