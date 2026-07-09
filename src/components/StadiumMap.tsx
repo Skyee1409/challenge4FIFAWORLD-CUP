@@ -1,6 +1,9 @@
 import React from 'react';
 import { MAP_NODES, MAP_EDGES, STAFF_RESOURCES } from '../services/mapService';
 import { Incident } from '../data/arenaData';
+import { SeatingSections } from './SeatingSections';
+import { GateNodes } from './GateNodes';
+import { ServiceConcessions } from './ServiceConcessions';
 
 interface StadiumMapProps {
   isStaff: boolean;
@@ -86,90 +89,13 @@ export const StadiumMap: React.FC<StadiumMapProps> = React.memo(({
       })}
 
       {/* Seating Sections */}
-      {Object.keys(MAP_NODES).map(key => {
-        const node = MAP_NODES[key];
-        if (node.type !== 'seating') return null;
-        const colorClass = node.accessible ? "seating-sec accessibility-sec" : "seating-sec";
-        return (
-          <g 
-            key={key} 
-            style={{ cursor: 'pointer', outline: 'none' }} 
-            onClick={() => handleMapNodeClick(key)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Select Seating Section ${key.split('_')[1]}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleMapNodeClick(key);
-              }
-            }}
-          >
-            <circle cx={node.x} cy={node.y} r={14} className={colorClass} />
-            <text x={node.x} y={node.y + 3} textAnchor="middle" className="map-node-label" style={{ fontSize: '7px', fill: 'white' }}>
-              {key.split('_')[1]}
-            </text>
-          </g>
-        );
-      })}
+      <SeatingSections handleMapNodeClick={handleMapNodeClick} />
 
       {/* Gates */}
-      {Object.keys(MAP_NODES).map(key => {
-        const node = MAP_NODES[key];
-        if (node.type !== 'gate') return null;
-        return (
-          <g 
-            key={key} 
-            style={{ cursor: 'pointer', outline: 'none' }} 
-            onClick={() => handleMapNodeClick(key)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Select Gate ${key.charAt(5)}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleMapNodeClick(key);
-              }
-            }}
-          >
-            <rect x={node.x - 12} y={node.y - 12} width={24} height={24} rx={4} className="stadium-gate" />
-            <text x={node.x} y={node.y + 4} textAnchor="middle" className="map-node-label" style={{ fontSize: '8px', fontWeight: 'bold', fill: 'var(--neon-cyan)' }}>
-              {key.charAt(5)}
-            </text>
-          </g>
-        );
-      })}
+      <GateNodes handleMapNodeClick={handleMapNodeClick} />
 
       {/* Service Concessions */}
-      {Object.keys(MAP_NODES).map(key => {
-        const node = MAP_NODES[key];
-        if (node.type !== 'service') return null;
-        let symbol = "🔹";
-        if (key === "FirstAid") symbol = "🩺";
-        if (key === "Concession_1") symbol = "🍔";
-        if (key === "Restroom_1") symbol = "🚾";
-        return (
-          <g 
-            key={key} 
-            style={{ cursor: 'pointer', outline: 'none' }} 
-            onClick={() => handleMapNodeClick(key)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Select Service Location ${node.name}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleMapNodeClick(key);
-              }
-            }}
-          >
-            <circle cx={node.x} cy={node.y} r={12} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
-            <text x={node.x} y={node.y + 4} textAnchor="middle" className="map-node-label" style={{ fontSize: '9px' }}>
-              {symbol}
-            </text>
-          </g>
-        );
-      })}
+      <ServiceConcessions handleMapNodeClick={handleMapNodeClick} />
 
       {/* Render Route Paths */}
       {navigationRouteStr && (
