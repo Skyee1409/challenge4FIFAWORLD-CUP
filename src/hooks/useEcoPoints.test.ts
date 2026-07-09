@@ -104,4 +104,17 @@ describe('useEcoPoints Hook Tests', () => {
     expect(result.points).toBe(100);
     expect(onClaim).not.toHaveBeenCalled();
   });
+
+  it('should correctly calculate Level 2 label boundary', () => {
+    const { result } = runHook(() => useEcoPoints(150));
+    expect(result.getLevelLabel()).toBe('Lv. 2 Eco Advocate');
+  });
+
+  it('should append claimed vouchers to claimedVouchers list', () => {
+    const { result } = runHook(() => useEcoPoints(300));
+    result.claimReward({ id: 'claim-cup', name: 'Eco Cup', cost: 200 });
+    expect(result.claimedVouchers.length).toBe(1);
+    expect(result.claimedVouchers[0].name).toBe('Eco Cup');
+    expect(result.claimedVouchers[0].code).toContain('WC2026-ECO');
+  });
 });

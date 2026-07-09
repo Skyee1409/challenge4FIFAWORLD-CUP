@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SimulationService } from '../services/simulationService';
 import DOMPurify from 'dompurify';
 
@@ -7,8 +7,23 @@ export const SimulationSandbox: React.FC = () => {
   const [simStatus, setSimStatus] = useState<string>('');
   const [simImpact, setSimImpact] = useState<string>('');
   const [simAgentLogs, setSimAgentLogs] = useState<{ agent: string; role: string; text: string }[]>([]);
+  
+  const activeTimeoutsRef = useRef<any[]>([]);
+
+  const clearActiveTimeouts = () => {
+    activeTimeoutsRef.current.forEach(t => clearTimeout(t));
+    activeTimeoutsRef.current = [];
+  };
+
+  useEffect(() => {
+    return () => {
+      // Clean up timeouts on unmount
+      activeTimeoutsRef.current.forEach(t => clearTimeout(t));
+    };
+  }, []);
 
   const runSimulation = () => {
+    clearActiveTimeouts();
     setSimStatus('loading');
     setSimImpact('');
     setSimAgentLogs([]);
@@ -19,18 +34,19 @@ export const SimulationSandbox: React.FC = () => {
       return;
     }
 
-    // Delay representing computing scenario analytics
-    setTimeout(() => {
+    const mainTimeout = setTimeout(() => {
       setSimStatus('complete');
       setSimImpact(scenario.impact);
 
       // Sequentially load agent coordination outputs
       scenario.actions.forEach((act, idx) => {
-        setTimeout(() => {
+        const actionTimeout = setTimeout(() => {
           setSimAgentLogs(prev => [...prev, act]);
         }, idx * 900);
+        activeTimeoutsRef.current.push(actionTimeout);
       });
     }, 1500);
+    activeTimeoutsRef.current.push(mainTimeout);
   };
 
   const sanitize = (dirty: string) => {

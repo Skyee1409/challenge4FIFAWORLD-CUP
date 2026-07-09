@@ -27,11 +27,15 @@ export const useEcoPoints = (initialPoints: number = 250, onVoucherClaimed?: (ms
       'chk-transit': true // Completed transit check by default
     })
   );
+  const [claimedVouchers, setClaimedVouchers] = useState<Array<{ id: string, name: string, code: string }>>(() =>
+    safeGetLocalStorage('arenamind_claimed_vouchers', [])
+  );
 
   // Calculate Champion Badge Level
   const getLevelLabel = useCallback(() => {
     if (points >= 400) return "Lv. 4 Elite Eco Champion";
-    if (points >= 200) return "Lv. 3 Eco Ambassador";
+    if (points >= 250) return "Lv. 3 Eco Ambassador";
+    if (points >= 100) return "Lv. 2 Eco Advocate";
     return "Lv. 1 Eco Supporter";
   }, [points]);
 
@@ -70,6 +74,12 @@ export const useEcoPoints = (initialPoints: number = 250, onVoucherClaimed?: (ms
       `\`\`\`\nCode: ${code}\n\`\`\`\n` +
       `Thank you for keeping FIFA 2026 green! ♻️`;
 
+    setClaimedVouchers(prev => {
+      const nextVouchers = [...prev, { id: reward.id, name: reward.name, code }];
+      safeSetLocalStorage('arenamind_claimed_vouchers', nextVouchers);
+      return nextVouchers;
+    });
+
     if (onVoucherClaimed) {
       onVoucherClaimed(voucherMessage);
     }
@@ -80,12 +90,14 @@ export const useEcoPoints = (initialPoints: number = 250, onVoucherClaimed?: (ms
   return useMemo(() => ({
     points,
     checkedActions,
+    claimedVouchers,
     getLevelLabel,
     toggleAction,
     claimReward
   }), [
     points,
     checkedActions,
+    claimedVouchers,
     getLevelLabel,
     toggleAction,
     claimReward

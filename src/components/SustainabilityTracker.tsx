@@ -5,6 +5,7 @@ interface SustainabilityTrackerProps {
   eco: {
     points: number;
     checkedActions: Record<string, boolean>;
+    claimedVouchers: Array<{ id: string, name: string, code: string }>;
     getLevelLabel: () => string;
     toggleAction: (act: any) => void;
     claimReward: (reward: EcoReward) => boolean;
@@ -13,7 +14,7 @@ interface SustainabilityTrackerProps {
 }
 
 export const SustainabilityTracker: React.FC<SustainabilityTrackerProps> = ({ eco, handleClaim }) => {
-  const { points, checkedActions, getLevelLabel, toggleAction } = eco;
+  const { points, checkedActions, claimedVouchers, getLevelLabel, toggleAction } = eco;
 
   return (
     <div className="card glass-panel sustainability-card" aria-label="Sustainability Tracker">
@@ -70,6 +71,23 @@ export const SustainabilityTracker: React.FC<SustainabilityTrackerProps> = ({ ec
             ))}
           </div>
         </div>
+
+        {claimedVouchers && claimedVouchers.length > 0 && (
+          <div className="claimed-vouchers-section" style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '1rem' }}>
+            <h4 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: '600' }}>My Claimed Coupons</h4>
+            <div className="vouchers-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {claimedVouchers.map((voucher, idx) => (
+                <div key={idx} className="voucher-item" style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{voucher.name}</div>
+                    <code style={{ fontSize: '0.75rem', color: 'var(--neon-green)', fontFamily: 'Space Mono, monospace' }}>{voucher.code}</code>
+                  </div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Active</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

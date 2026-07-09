@@ -170,11 +170,28 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
     inputCallback(randomPrompt);
   }, []);
 
+  const appendBotMessage = useCallback((text: string) => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages(prev => {
+      const next = [...prev, { sender: 'bot', text, timestamp }];
+      safeSetLocalStorage('arenamind_chat_messages', next);
+      return next;
+    });
+  }, []);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingTimer.current) clearInterval(streamingTimer.current);
+    };
+  }, []);
+
   return useMemo(() => ({
     messages,
     isTyping,
     selectedLanguage,
     sendMessage,
+    appendBotMessage,
     changeLanguage,
     playVoiceOutput,
     simulateVoiceInput
@@ -183,6 +200,7 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
     isTyping,
     selectedLanguage,
     sendMessage,
+    appendBotMessage,
     changeLanguage,
     playVoiceOutput,
     simulateVoiceInput

@@ -82,43 +82,88 @@ export const STAFF_RESOURCES: StaffResource[] = [
 ];
 
 export const MapService = {
-  // BFS pathfinder
+  // Dijkstra pathfinder (finds shortest path by distance weights)
   findPath: (startId: string, endId: string, accessibleOnly: boolean = false): { path: string[] | null; accessible: boolean } => {
     if (!MAP_NODES[startId] || !MAP_NODES[endId]) return { path: null, accessible: false };
 
-    const queue: string[][] = [[startId]];
-    const visited = new Set<string>();
-    visited.add(startId);
+    const distances: Record<string, number> = {};
+    const previous: Record<string, string | null> = {};
+    const nodes = new Set<string>();
 
-    while (queue.length > 0) {
-      const path = queue.shift()!;
-      const node = path[path.length - 1];
+    Object.keys(MAP_NODES).forEach(nodeId => {
+      distances[nodeId] = Infinity;
+      previous[nodeId] = null;
+      nodes.add(nodeId);
+    });
 
-      if (node === endId) {
-        return { path, accessible: accessibleOnly };
+    distances[startId] = 0;
+
+    while (nodes.size > 0) {
+      let smallest: string | null = null;
+      nodes.forEach(nodeId => {
+        if (smallest === null || distances[nodeId] < distances[smallest]) {
+          smallest = nodeId;
+        }
+      });
+
+      if (smallest === null || distances[smallest] === Infinity) {
+        break;
       }
 
-      // Filter adjacent edges
-      const neighbors = MAP_EDGES.filter(edge => {
-        const connects = (edge.from === node || edge.to === node);
+      if (smallest === endId) {
+        break;
+      }
+
+      nodes.delete(smallest);
+
+      const currentNode = smallest;
+      const adjacentEdges = MAP_EDGES.filter(edge => {
+        const connects = (edge.from === currentNode || edge.to === currentNode);
         const accessCheck = !accessibleOnly || edge.accessible;
         return connects && accessCheck;
-      }).map(edge => (edge.from === node ? edge.to : edge.from));
+      });
 
-      for (const neighbor of neighbors) {
-        if (!visited.has(neighbor)) {
-          visited.add(neighbor);
-          queue.push([...path, neighbor]);
+      adjacentEdges.forEach(edge => {
+        const neighbor = edge.from === currentNode ? edge.to : edge.from;
+        if (!nodes.has(neighbor)) return;
+
+        const alt = distances[currentNode] + edge.dist;
+        if (alt < distances[neighbor]) {
+          distances[neighbor] = alt;
+          previous[neighbor] = currentNode;
         }
-      }
+      });
     }
 
-    // Fallback: search without accessibility constraint if not found
+    if (distances[endId] !== Infinity) {
+      const path: string[] = [];
+      let curr: string | null = endId;
+      while (curr !== null) {
+        path.unshift(curr);
+        curr = previous[curr];
+      }
+
+      let isFullyAccessible = true;
+      for (let i = 0; i < path.length - 1; i++) {
+        const from = path[i];
+        const to = path[i + 1];
+        const edge = MAP_EDGES.find(e => 
+          (e.from === from && e.to === to) || (e.from === to && e.to === from)
+        );
+        if (!edge || !edge.accessible) {
+          isFullyAccessible = false;
+          break;
+        }
+      }
+
+      return { path, accessible: isFullyAccessible };
+    }
+
     if (accessibleOnly) {
       const fallback = MapService.findPath(startId, endId, false);
       return { path: fallback.path, accessible: false };
     }
-    
+
     return { path: null, accessible: false };
   }
 };

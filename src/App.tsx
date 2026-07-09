@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { ARENA_DATA, ServiceItem, EcoReward } from './data/arenaData';
 import { MapService, MAP_NODES } from './services/mapService';
 import { useChat } from './hooks/useChat';
@@ -21,7 +22,7 @@ const formatMarkdown = (text: string) => {
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
     .replace(/\n/g, "<br>");
-  return { __html: formatted };
+  return { __html: DOMPurify.sanitize(formatted) };
 };
 
 export default function App() {
@@ -102,9 +103,8 @@ export default function App() {
   const chat = useChat('en', handleChatTriggerAccessibility);
   
   const handleVoucherClaimed = useCallback((msg: string) => {
-    // Append claimed eco rewards ticket directly to chat history (DRY implementation)
-    chat.sendMessage(msg);
-  }, [chat.sendMessage]);
+    chat.appendBotMessage(msg);
+  }, [chat.appendBotMessage]);
 
   const eco = useEcoPoints(250, handleVoucherClaimed);
   

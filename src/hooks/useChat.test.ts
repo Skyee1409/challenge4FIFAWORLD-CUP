@@ -92,4 +92,12 @@ describe('useChat Hook Tests', () => {
     expect(cb).toHaveBeenCalled();
     expect(typeof cb.mock.calls[0][0]).toBe('string');
   });
+
+  it('should append a bot message directly using appendBotMessage', () => {
+    const { result } = runHook(() => useChat('en'));
+    result.appendBotMessage('Test System Message');
+    expect(result.messages.length).toBe(2);
+    expect(result.messages[1].sender).toBe('bot');
+    expect(result.messages[1].text).toBe('Test System Message');
+  });
 });
