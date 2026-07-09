@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { AIService } from '../services/aiService';
 
 export interface ChatMessage {
@@ -15,27 +15,63 @@ const GREETINGS: Record<string, string> = {
   pt: "👋 Olá! Sou o **ArenaMind**, seu assistente GenAI para a Copa do Mundo FIFA 2026. Posso ajudar com rotas acessíveis, transporte sustentável e tempos de espera. Como posso te ajudar hoje?"
 };
 
-export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?: () => void) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState(initialLang);
-  const streamingTimer = useRef<any>(null);
+const safeGetLocalStorage = (key: string, fallback: any) => {
+  try {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
-  // Initialize with greeting
-  useEffect(() => {
-    setMessages([
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+};
+
+export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?: () => void) => {
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() =>
+    safeGetLocalStorage('arenamind_chat_lang', initialLang)
+  );
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const persisted = safeGetLocalStorage('arenamind_chat_messages', null);
+    if (persisted) return persisted;
+    return [
       {
         sender: 'bot',
         text: GREETINGS[selectedLanguage] || GREETINGS['en'],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
-    ]);
-  }, [selectedLanguage]);
+    ];
+  });
+
+  const [isTyping, setIsTyping] = useState(false);
+  const streamingTimer = useRef<any>(null);
 
   // Set language wrapper
   const changeLanguage = useCallback((lang: string) => {
     if (streamingTimer.current) clearInterval(streamingTimer.current);
     setSelectedLanguage(lang);
+    safeSetLocalStorage('arenamind_chat_lang', lang);
+
+    setMessages(prev => {
+      if (prev.length <= 1) {
+        const next = [
+          {
+            sender: 'bot',
+            text: GREETINGS[lang] || GREETINGS['en'],
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ];
+        safeSetLocalStorage('arenamind_chat_messages', next);
+        return next;
+      }
+      return prev;
+    });
   }, []);
 
   // Audio Playback Translation Simulation
@@ -60,7 +96,11 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     // Add an empty bot message that we will stream into
-    setMessages(prev => [...prev, { sender: 'bot', text: '', timestamp, isStreaming: true }]);
+    setMessages(prev => {
+      const next = [...prev, { sender: 'bot', text: '', timestamp, isStreaming: true }];
+      safeSetLocalStorage('arenamind_chat_messages', next);
+      return next;
+    });
 
     let index = 0;
     streamingTimer.current = setInterval(() => {
@@ -71,6 +111,7 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
           if (lastMsg && lastMsg.sender === 'bot') {
             lastMsg.text = fullText.substring(0, index + 1);
           }
+          safeSetLocalStorage('arenamind_chat_messages', updated);
           return updated;
         });
         index++;
@@ -82,6 +123,7 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
           if (lastMsg) {
             lastMsg.isStreaming = false;
           }
+          safeSetLocalStorage('arenamind_chat_messages', updated);
           return updated;
         });
       }
@@ -93,7 +135,11 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
     if (isTyping) return;
     
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setMessages(prev => [...prev, { sender: 'user', text, timestamp }]);
+    setMessages(prev => {
+      const next = [...prev, { sender: 'user', text, timestamp }];
+      safeSetLocalStorage('arenamind_chat_messages', next);
+      return next;
+    });
     
     setIsTyping(true);
 
@@ -124,7 +170,7 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
     inputCallback(randomPrompt);
   }, []);
 
-  return {
+  return useMemo(() => ({
     messages,
     isTyping,
     selectedLanguage,
@@ -132,5 +178,14 @@ export const useChat = (initialLang: string = 'en', onTriggerAccessibilityRoute?
     changeLanguage,
     playVoiceOutput,
     simulateVoiceInput
-  };
+  }), [
+    messages,
+    isTyping,
+    selectedLanguage,
+    sendMessage,
+    changeLanguage,
+    playVoiceOutput,
+    simulateVoiceInput
+  ]);
 };
+

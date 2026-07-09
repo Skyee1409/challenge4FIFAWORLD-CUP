@@ -83,8 +83,8 @@ export const STAFF_RESOURCES: StaffResource[] = [
 
 export const MapService = {
   // BFS pathfinder
-  findPath: (startId: string, endId: string, accessibleOnly: boolean = false): string[] | null => {
-    if (!MAP_NODES[startId] || !MAP_NODES[endId]) return null;
+  findPath: (startId: string, endId: string, accessibleOnly: boolean = false): { path: string[] | null; accessible: boolean } => {
+    if (!MAP_NODES[startId] || !MAP_NODES[endId]) return { path: null, accessible: false };
 
     const queue: string[][] = [[startId]];
     const visited = new Set<string>();
@@ -95,7 +95,7 @@ export const MapService = {
       const node = path[path.length - 1];
 
       if (node === endId) {
-        return path;
+        return { path, accessible: accessibleOnly };
       }
 
       // Filter adjacent edges
@@ -115,9 +115,11 @@ export const MapService = {
 
     // Fallback: search without accessibility constraint if not found
     if (accessibleOnly) {
-      return MapService.findPath(startId, endId, false);
+      const fallback = MapService.findPath(startId, endId, false);
+      return { path: fallback.path, accessible: false };
     }
     
-    return null;
+    return { path: null, accessible: false };
   }
 };
+

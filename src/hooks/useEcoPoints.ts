@@ -1,11 +1,32 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { EcoAction, EcoReward } from '../data/arenaData';
 
+const safeGetLocalStorage = (key: string, fallback: any) => {
+  try {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+};
+
 export const useEcoPoints = (initialPoints: number = 250, onVoucherClaimed?: (msg: string) => void) => {
-  const [points, setPoints] = useState(initialPoints);
-  const [checkedActions, setCheckedActions] = useState<Record<string, boolean>>({
-    'chk-transit': true // Completed transit check by default
-  });
+  const [points, setPoints] = useState<number>(() => 
+    safeGetLocalStorage('arenamind_eco_points', initialPoints)
+  );
+  const [checkedActions, setCheckedActions] = useState<Record<string, boolean>>(() => 
+    safeGetLocalStorage('arenamind_checked_actions', {
+      'chk-transit': true // Completed transit check by default
+    })
+  );
 
   // Calculate Champion Badge Level
   const getLevelLabel = useCallback(() => {
@@ -19,11 +40,14 @@ export const useEcoPoints = (initialPoints: number = 250, onVoucherClaimed?: (ms
     setCheckedActions(prev => {
       const isChecking = !prev[action.id];
       const nextChecked = { ...prev, [action.id]: isChecking };
+      safeSetLocalStorage('arenamind_checked_actions', nextChecked);
       
       // Update points
       setPoints(current => {
         const diff = isChecking ? action.points : -action.points;
-        return Math.max(0, current + diff);
+        const nextPoints = Math.max(0, current + diff);
+        safeSetLocalStorage('arenamind_eco_points', nextPoints);
+        return nextPoints;
       });
 
       return nextChecked;
@@ -34,7 +58,11 @@ export const useEcoPoints = (initialPoints: number = 250, onVoucherClaimed?: (ms
   const claimReward = useCallback((reward: EcoReward) => {
     if (points < reward.cost) return false;
 
-    setPoints(current => current - reward.cost);
+    setPoints(current => {
+      const nextPoints = current - reward.cost;
+      safeSetLocalStorage('arenamind_eco_points', nextPoints);
+      return nextPoints;
+    });
     
     // Generate claim ticket
     const code = `WC2026-ECO-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -49,11 +77,18 @@ export const useEcoPoints = (initialPoints: number = 250, onVoucherClaimed?: (ms
     return true;
   }, [points, onVoucherClaimed]);
 
-  return {
+  return useMemo(() => ({
     points,
     checkedActions,
     getLevelLabel,
     toggleAction,
     claimReward
-  };
+  }), [
+    points,
+    checkedActions,
+    getLevelLabel,
+    toggleAction,
+    claimReward
+  ]);
 };
+

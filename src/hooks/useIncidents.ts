@@ -1,10 +1,29 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ARENA_DATA, Incident } from '../data/arenaData';
 import { AIService } from '../services/aiService';
 import { validateIncidentInput } from '../validators/incidentValidator';
 
+const safeGetLocalStorage = (key: string, fallback: any) => {
+  try {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+};
+
 export const useIncidents = (initialIncidents: Incident[] = ARENA_DATA.incidents) => {
-  const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
+  const [incidents, setIncidents] = useState<Incident[]>(() =>
+    safeGetLocalStorage('arenamind_incidents', initialIncidents)
+  );
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
 
   // Selector details
@@ -36,7 +55,11 @@ export const useIncidents = (initialIncidents: Incident[] = ARENA_DATA.incidents
       recommendation: aiRec
     };
 
-    setIncidents(prev => [newInc, ...prev]);
+    setIncidents(prev => {
+      const nextIncidents = [newInc, ...prev];
+      safeSetLocalStorage('arenamind_incidents', nextIncidents);
+      return nextIncidents;
+    });
     setSelectedIncidentId(id);
 
     return { success: true };
@@ -45,7 +68,7 @@ export const useIncidents = (initialIncidents: Incident[] = ARENA_DATA.incidents
   // Deploy resources dispatcher
   const dispatchIncident = useCallback((id: string) => {
     setIncidents(prev => {
-      return prev.map(inc => {
+      const nextIncidents = prev.map(inc => {
         if (inc.id === id) {
           const dispatchedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           return {
@@ -56,23 +79,27 @@ export const useIncidents = (initialIncidents: Incident[] = ARENA_DATA.incidents
         }
         return inc;
       });
+      safeSetLocalStorage('arenamind_incidents', nextIncidents);
+      return nextIncidents;
     });
   }, []);
 
   // Resolve active alert
   const resolveIncident = useCallback((id: string) => {
     setIncidents(prev => {
-      return prev.map(inc => {
+      const nextIncidents = prev.map(inc => {
         if (inc.id === id) {
           return { ...inc, status: 'resolved' };
         }
         return inc;
       });
+      safeSetLocalStorage('arenamind_incidents', nextIncidents);
+      return nextIncidents;
     });
     setSelectedIncidentId(null);
   }, []);
 
-  return {
+  return useMemo(() => ({
     incidents,
     selectedIncidentId,
     setSelectedIncidentId,
@@ -80,5 +107,14 @@ export const useIncidents = (initialIncidents: Incident[] = ARENA_DATA.incidents
     logIncident,
     dispatchIncident,
     resolveIncident
-  };
+  }), [
+    incidents,
+    selectedIncidentId,
+    setSelectedIncidentId,
+    getSelectedIncident,
+    logIncident,
+    dispatchIncident,
+    resolveIncident
+  ]);
 };
+
