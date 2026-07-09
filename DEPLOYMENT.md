@@ -31,8 +31,8 @@ Since ArenaMind is a fully static client-side web application, it can be deploye
 4. In the configuration settings, set the following:
    - **Name**: `arenamind-fifa2026`
    - **Branch**: `main`
-   - **Build Command**: *Leave this blank*
-   - **Publish Directory**: `.` (a single dot, representing the root directory)
-5. Click **"Create Static Site"**.
+   - **Build Command**: `npm run build`
+   - **Publish Directory**: `dist`
+5. Click **"Create Static Site"** to deploy.
 
 Render will deploy the application within a minute and provide a live URL (e.g., `https://arenamind-fifa2026.onrender.com`).
